@@ -6,12 +6,15 @@ use db::{create_game_sessionid, create_gamedb, create_new_sessionid};
 
 use warp::Filter;
 use warp::ws::{Message, WebSocket};
-use futures_util::{StreamExt, SinkExt};
+use futures_util::{SinkExt, StreamExt, TryFutureExt};
 use rusqlite::{params, Connection};
 use std::collections::HashMap;
+use std::intrinsics::discriminant_value;
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 use serde_json::{Result, Value};
+
+use crate::db::session_auth;
 
 #[derive(serde::Deserialize, serde::Serialize)]
 struct Response {
@@ -36,7 +39,7 @@ struct ActiveGame {
     session_id : String,    
     admintoken : String,    
     userboard : HashMap<String, i32>,
-    connections : Vec<WebSocket>,
+    connections : Vec<Arc<Mutex<WebSocket>>>,
     question_number : i8,
 }
 
@@ -130,6 +133,7 @@ async fn main() {
 }
 
 async fn handle_socket(ws: WebSocket) {
+    
     let (mut tx, mut rx) = ws.split();
 
     while let Some(Ok(msg)) = rx.next().await {
@@ -143,31 +147,33 @@ async fn handle_socket(ws: WebSocket) {
 
         if msg.is_text() {
             let received = msg.to_str().unwrap();
-            
             let data : Value = serde_json::from_str(received).unwrap(); 
-        
             let function = &data.clone()["function"]; 
-
             if function == "join game" {
                 
                 let username = &data.clone()["username"]; 
-                let sessiontoken = &data.clone()["sessionToken"]; 
+                let token = &data.clone()["token"]; 
                 let sessionid = &data.clone()["sessionid"]; 
 
                 // call session auth                 
+                if !session_auth(username.to_string(), token.to_string()) {
+                    tx.send(Message::text("Auth Failed")).await.unwrap();
+                    continue; 
+                } 
 
-
-
+                let activegames = GAME_REGISTRY.lock().unwrap().keys().cloned().collect::<Vec<String>>();
+                
+                if !activegames.contains(&sessionid.to_string()) {
+                    tx.send(Message::text("Game Does Not Exist")).await.unwrap();
+                    continue; 
+                }
+                
+                drop(activegames);
 
             }
                 
 
-
-
         }
-    
-
-
 
     }
 }

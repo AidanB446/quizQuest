@@ -138,11 +138,13 @@ pub fn create_user(username : String, password : String) -> bool {
 
 }
 
-pub fn session_auth(username : String, token : String) {
+pub fn session_auth(username : String, token : String) -> bool {
     
-    
+    let conn = Connection::open("./users.db").unwrap();  
+    let query = "SELECT EXISTS(SELECT 1 FROM users WHERE username= ?, sessionID = ?)";
+    let mut stmt = conn.prepare(query).unwrap();
+    let exists: bool = stmt.query_row(params![username, token], |row| row.get(0)).unwrap();
 
-
-
+    return exists;
 }
 
