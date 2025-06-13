@@ -1,0 +1,16 @@
+
+sqlite
+	table games
+		gamename text
+		questions text	
+
+	questions will be a json object {question1 : {}, question2 : {}...}
+	
+	table users
+		username TEXT
+		password TEXT
+		sessionID TEXT // when sessionID is not active, it will be "Undefined"
+
+
+
+
