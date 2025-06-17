@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"slices"
 	"math/rand"
+	"slices"
+
 	_ "modernc.org/sqlite"
 )
 
@@ -126,4 +128,27 @@ func sessionAuth(username string, token string) bool {
 
 	return exists
 } 
+
+func getQuestion(gamename string, questionnumber string) map[string]string {
+	
+	var question string
+	var questionMap map[string]map[string]string
+
+	gamedbLock.RLock()
+	defer gamedbLock.RUnlock()
+
+	query := `SELECT EXISTS(SELECT 1 FROM game WHERE gamename = ?, LIMIT 1)`
+    gamedb.QueryRow(query, gamename).Scan(&question)
+	
+	json.Unmarshal([]byte(question), &questionMap)
+
+	return questionMap[questionnumber]
+}
+
+func gameAuth(data map[string]string) bool {
+	token := data["token"] 	
+	session := data["sessionid"]	
+
+	return GAME_REGISTRY[session].admintoken == token
+}
 
