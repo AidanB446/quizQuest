@@ -10,20 +10,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func postHandler(w http.ResponseWriter, r *http.Request) {
-
-	var data map[string]any
-
-    decoder := json.NewDecoder(r.Body)
-    if err := decoder.Decode(&data); err != nil {
-        http.Error(w, "Invalid JSON", http.StatusBadRequest)
-        return
-    }
-
-    log.Printf("Received POST JSON: %+v\n", data)
-    fmt.Fprintf(w, "Data received: %+v\n", data)
-}
-
 func wsHandler(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {

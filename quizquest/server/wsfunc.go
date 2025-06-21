@@ -41,7 +41,7 @@ func submitQuestion(data map[string]string) bool {
 	if !sessionAuth(data["username"], data["token"]) {
 		return false
 	}
-	
+
 	gamename := GAME_REGISTRY[data["sessionid"]].gamename	
 
 	var questionstring string		

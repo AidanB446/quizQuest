@@ -35,6 +35,7 @@ var (
 var upgrader = websocket.Upgrader{
     CheckOrigin: func(r *http.Request) bool { return true }, // For demo only
 }
+
 func main() {
 
 	userdb, _ = sql.Open("sqlite", "./users.db")
@@ -43,11 +44,13 @@ func main() {
 	GAME_REGISTRY = make(map[string]ActiveGame)
 
 	http.HandleFunc("/ws", wsHandler)
-    http.HandleFunc("/submit", postHandler)
 	http.HandleFunc("/start-game", startGame)	
+	http.HandleFunc("/create-game", createGame)	
+	http.HandleFunc("/next-question", nextquestion)	
+	http.HandleFunc("/game-end", gameEnd)	
+
 
     log.Println("Server running on http://localhost:8080")
     log.Fatal(http.ListenAndServe(":8080", nil))
-
 }
 
